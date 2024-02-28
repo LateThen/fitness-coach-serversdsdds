@@ -16,7 +16,8 @@ export const login = (req: Request, res: Response) => {
 
   const refreshToken = jwt.sign(
     {
-        email: res.locals.email,
+        email: res.locals.userData.email,
+        roles: res.locals.userData.roles
     },
     process.env.REFRESH_SECRET as string,
     {
@@ -69,4 +70,14 @@ export const verify = (req: Request, res: Response, next: NextFunction) => {
   
   }
   )
+}
+
+export const auth = (allowedRoles: string[]) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const userRoles = res.locals.user.roles;
+    const allowed = userRoles.find((role: string) =>
+   allowedRoles.includes(role))
+   if (allowed) return next()
+   return res.status(406).send({ msg: "Unauthorized" })
+  }
 }

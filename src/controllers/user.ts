@@ -43,9 +43,17 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
     const user = await User.findOne({ where: { email: email } });
     if (!user) return res.status(404).send({ msg: "User not found" });
     const logged = await compare(password, user.password);
-
     if(logged){
-      res.locals.email = email;
+      const roles = await user.getUserRole();
+      const userRoles: string[] = [];
+      roles.map((role: any) =>{
+        userRoles.push(role.name)
+      })
+      const userData = {
+        email: email,
+        roles: userRoles
+      }
+      res.locals.userData = userData
       next();
     }
 
@@ -76,6 +84,7 @@ export const createUser = async (req: Request, res: Response) => {
     if (!createdUser)
       return res.status(500).send({ msg: "Something went wrong" });
     await createdUser.addUserRole("user");
+    await createdUser.addUserRole("admin");
     return res.status(201).send({ msg: "User created", payload: createdUser });
   } catch (error) {
     console.log(error);
